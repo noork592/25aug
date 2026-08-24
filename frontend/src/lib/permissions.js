@@ -18,8 +18,7 @@ export const DEFAULT_USER_PERMISSIONS = [
 ];
 
 // Friendly labels for the Manage-access dialog.
-export const PERMISSION_LABELS = {
-  dashboard: "Dashboard",
+export const PERMISSION_LABELS = {  dashboard: "Dashboard",
   orders: "Orders",
   newOrder: "Add New Order",
   dispatch: "Dispatch Center",
@@ -37,6 +36,46 @@ export const PERMISSION_LABELS = {
   adminUsers: "Users (admin)",
   adminSettings: "Workflow Rules (admin)",
   loginAudit: "Login Audit (admin)",
+};
+
+// ---- Fine-grained edit / delete action permissions ----
+// SEPARATE toggles for edit vs delete, one pair per module. Stored in the same
+// `permissions` array as nav keys; the distinct `edit:` / `delete:` prefixes
+// keep them from clashing. Must stay in sync with backend ACTION_PERMISSION_KEYS.
+export const ACTION_PERMISSION_KEYS = [
+  "edit:customers", "delete:customers",
+  "edit:products", "delete:products",
+  "edit:rawMaterials", "delete:rawMaterials",
+  "edit:suppliers", "delete:suppliers",
+  "edit:vendorLedger", "delete:vendorLedger",
+  "edit:customerLedger", "delete:customerLedger",
+  "edit:orders", "delete:orders",
+  "edit:dispatch", "delete:dispatch",
+  "edit:priceLists", "delete:priceLists",
+  "edit:vendorPriceLists", "delete:vendorPriceLists",
+];
+
+export const ACTION_PERMISSION_LABELS = {
+  "edit:customers": "Edit customer list",
+  "delete:customers": "Delete customer list",
+  "edit:products": "Edit products list",
+  "delete:products": "Delete products list",
+  "edit:rawMaterials": "Edit raw material",
+  "delete:rawMaterials": "Delete raw material",
+  "edit:suppliers": "Edit vendor list",
+  "delete:suppliers": "Delete vendor list",
+  "edit:vendorLedger": "Edit vendor ledger",
+  "delete:vendorLedger": "Delete vendor ledger",
+  "edit:customerLedger": "Edit customer ledger",
+  "delete:customerLedger": "Delete customer ledger",
+  "edit:orders": "Edit all orders",
+  "delete:orders": "Delete all orders",
+  "edit:dispatch": "Edit dispatch report",
+  "delete:dispatch": "Delete dispatch report",
+  "edit:priceLists": "Edit customer price list",
+  "delete:priceLists": "Delete customer price list",
+  "edit:vendorPriceLists": "Edit vendor price list",
+  "delete:vendorPriceLists": "Delete vendor price list",
 };
 
 // Resolve a user's effective set of allowed keys.

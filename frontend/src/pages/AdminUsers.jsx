@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { UserPlus, KeyRound, Trash2, Shield, User as UserIcon, Lock, RotateCcw, CheckCircle2 } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useConfirm } from "@/lib/useConfirm";
-import { ALL_PERMISSION_KEYS, DEFAULT_USER_PERMISSIONS, PERMISSION_LABELS } from "@/lib/permissions";
+import { ALL_PERMISSION_KEYS, DEFAULT_USER_PERMISSIONS, PERMISSION_LABELS, ACTION_PERMISSION_KEYS, ACTION_PERMISSION_LABELS } from "@/lib/permissions";
 
 export default function AdminUsers() {
   const { user: me } = useAuth();
@@ -132,6 +132,12 @@ export default function AdminUsers() {
       return next;
     });
   const setPermAll = (on) => setPermSet(new Set(on ? ALL_PERMISSION_KEYS : []));
+  const setActionAll = (on) =>
+    setPermSet((prev) => {
+      const next = new Set(prev);
+      ACTION_PERMISSION_KEYS.forEach((k) => { if (on) next.add(k); else next.delete(k); });
+      return next;
+    });
   const resetPermsToDefault = () => setPermSet(new Set(DEFAULT_USER_PERMISSIONS));
   const clearPermsOverride = async () => {
     if (!permTarget) return;
@@ -151,7 +157,7 @@ export default function AdminUsers() {
     if (!permTarget) return;
     setPermSaving(true);
     try {
-      const list = ALL_PERMISSION_KEYS.filter((k) => permSet.has(k));
+      const list = [...ALL_PERMISSION_KEYS, ...ACTION_PERMISSION_KEYS].filter((k) => permSet.has(k));
       const { data: updated } = await api.patch(`/users/${permTarget.id}/permissions`, { permissions: list });
       toast.success(`Access updated for ${permTarget.username || permTarget.email}`);
       loadPermAudit(permTarget.id);
@@ -378,7 +384,7 @@ export default function AdminUsers() {
           <div className="space-y-3 max-h-[55vh] overflow-y-auto pr-1">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="text-[11px] text-slate-500">
-                {permSet.size} of {ALL_PERMISSION_KEYS.length} tabs allowed
+                {ALL_PERMISSION_KEYS.filter((k) => permSet.has(k)).length} of {ALL_PERMISSION_KEYS.length} tabs allowed
                 {Array.isArray(permTarget?.permissions)
                   ? <span className="ml-2 inline-flex items-center gap-1 text-orange-900 font-bold uppercase tracking-wider"><Lock className="w-3 h-3" /> custom</span>
                   : <span className="ml-2 inline-flex items-center gap-1 text-slate-500 font-bold uppercase tracking-wider">default</span>}
@@ -419,6 +425,45 @@ export default function AdminUsers() {
               ))}
             </div>
 
+            {/* Fine-grained edit / delete permissions */}
+            <div className="border border-slate-200 rounded-sm" data-testid="action-perms-section">
+              <div className="px-3 py-2 bg-orange-50 border-b border-orange-200 flex items-center justify-between gap-2 flex-wrap">
+                <div className="text-[11px] uppercase tracking-wider font-bold text-orange-900 inline-flex items-center gap-1.5">
+                  <Lock className="w-3 h-3" /> Edit / Delete permissions
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button type="button" size="sm" variant="outline"
+                          onClick={() => setActionAll(true)}
+                          data-testid="action-grant-all"
+                          className="rounded-sm h-7">
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Grant all
+                  </Button>
+                  <Button type="button" size="sm" variant="outline"
+                          onClick={() => setActionAll(false)}
+                          data-testid="action-revoke-all"
+                          className="rounded-sm h-7">
+                    Revoke all
+                  </Button>
+                </div>
+              </div>
+              <div className="px-3 py-2 text-[11px] text-slate-500">
+                Grant Edit and Delete separately per module. When OFF for both, the user can only view.
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-2 pt-0">
+                {ACTION_PERMISSION_KEYS.map((key) => (
+                  <label key={key} className="flex items-center gap-2 px-2 py-2 rounded-sm border border-slate-100 hover:bg-orange-50 cursor-pointer"
+                         data-testid={`action-row-${key}`}>
+                    <input type="checkbox"
+                           checked={permSet.has(key)}
+                           onChange={() => togglePerm(key)}
+                           data-testid={`action-cb-${key}`}
+                           className="accent-[#E65100]" />
+                    <span className="text-sm font-semibold text-slate-800 truncate">{ACTION_PERMISSION_LABELS[key] || key}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             {/* Recent permission changes (audit trail) */}
             <div className="border border-slate-200 rounded-sm" data-testid="perm-audit-section">
               <div className="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -442,12 +487,12 @@ export default function AdminUsers() {
                       <div className="mt-0.5 flex flex-wrap gap-1">
                         {(row.added || []).map((k) => (
                           <span key={"a"+k} className="text-[10px] uppercase tracking-wider font-bold bg-emerald-50 border border-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded-sm">
-                            + {PERMISSION_LABELS[k] || k}
+                            + {PERMISSION_LABELS[k] || ACTION_PERMISSION_LABELS[k] || k}
                           </span>
                         ))}
                         {(row.removed || []).map((k) => (
                           <span key={"r"+k} className="text-[10px] uppercase tracking-wider font-bold bg-rose-50 border border-rose-200 text-rose-800 px-1.5 py-0.5 rounded-sm">
-                            − {PERMISSION_LABELS[k] || k}
+                            − {PERMISSION_LABELS[k] || ACTION_PERMISSION_LABELS[k] || k}
                           </span>
                         ))}
                         {(row.added || []).length === 0 && (row.removed || []).length === 0 && (
